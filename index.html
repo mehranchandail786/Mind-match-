@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mind Match - PlayToFriends</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #111122);
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #a78bfa;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .room {
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+    #question {
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .option-btn {
+      background: #222;
+      border: 2px solid #a78bfa;
+      color: white;
+      border-radius: 12px;
+      padding: 12px 24px;
+      margin: 10px auto;
+      font-size: 18px;
+      width: 90%;
+      max-width: 300px;
+      transition: 0.3s;
+      display: block;
+    }
+
+    .option-btn:hover {
+      background-color: #a78bfa;
+      color: black;
+      cursor: pointer;
+      transform: scale(1.05);
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #79ffb3;
+      min-height: 40px;
+    }
+
+    #timer {
+      font-size: 18px;
+      color: #fffa72;
+      margin-bottom: 15px;
+    }
+
+    #score {
+      margin-top: 15px;
+      color: #5eead4;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .btn-next {
+      background: #4ade80;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-next:hover {
+      background: #22c55e;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Mind Match</h1>
+  <div class="room" id="roomCodeDisplay">Room: -</div>
+  <div id="timer">Time left: 10</div>
+
+  <h2 id="question">Loading question...</h2>
+  <div id="options"></div>
+
+  <div class="result" id="resultMsg"></div>
+  <div id="score">Your Score: 0</div>
+  <button class="btn-next hidden" id="nextBtn" onclick="loadNext()">Next Round</button>
+
+  <script>
+    const questions = [
+      {
+        q: "Agar ek superpower milti, toh kya log chahenge?",
+        options: ["Invisibility", "Time Travel", "Flying", "Mind Reading"]
+      },
+      {
+        q: "Best junk food kya hai?",
+        options: ["Pizza", "Momos", "Burger", "Samosa"]
+      },
+      {
+        q: "Weekend pe sabse chill plan?",
+        options: ["Netflix", "Sleeping", "Partying", "Gaming"]
+      },
+      {
+        q: "Ek hi cheez zindagi bhar khani pade toh?",
+        options: ["Biryani", "Maggie", "Paneer", "Ice Cream"]
+      },
+      {
+        q: "Kis app ke bina zindagi adhoori hai?",
+        options: ["WhatsApp", "Instagram", "YouTube", "Spotify"]
+      }
+    ];
+
+    let usedIndexes = [];
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 10;
+
+    const params = new URLSearchParams(window.location.search);
+    const roomCode = params.get('room') || "XXXX";
+    document.getElementById("roomCodeDisplay").textContent = `Room Code: ${roomCode}`;
+
+    function pickQuestion() {
+      if (usedIndexes.length === questions.length) usedIndexes = [];
+      let index;
+      do {
+        index = Math.floor(Math.random() * questions.length);
+      } while (usedIndexes.includes(index));
+      usedIndexes.push(index);
+      return questions[index];
+    }
+
+    function showQuestion() {
+      const qObj = pickQuestion();
+      document.getElementById("question").textContent = qObj.q;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      document.getElementById("resultMsg").textContent = "";
+      document.getElementById("nextBtn").classList.add("hidden");
+
+      qObj.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = option;
+        btn.onclick = () => handleAnswer(option);
+        optionsDiv.appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    function handleAnswer(option) {
+      clearInterval(timerInterval);
+      score++;
+      document.getElementById("resultMsg").textContent =
+        `Tumne "${option}" choose kiya! Kya baaki log bhi wahi soch rahe honge?`;
+      document.getElementById("options").innerHTML = "";
+      document.getElementById("nextBtn").classList.remove("hidden");
+      document.getElementById("score").textContent = `Your Score: ${score}`;
+      playSound('correct.mp3');
+    }
+
+    function startTimer() {
+      timeLeft = 10;
+      document.getElementById("timer").textContent = `Time left: ${timeLeft}`;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = `Time left: ${timeLeft}`;
+        if (timeLeft === 0) {
+          clearInterval(timerInterval);
+          document.getElementById("resultMsg").textContent = "Time's up! Tumne kuch choose nahi kiya.";
+          document.getElementById("options").innerHTML = "";
+          document.getElementById("nextBtn").classList.remove("hidden");
+          playSound('timeup.mp3');
+        }
+      }, 1000);
+    }
+
+    function loadNext() {
+      showQuestion();
+    }
+
+    function playSound(file) {
+      var audio = new Audio(file);
+      audio.play();
+    }
+
+    // Start the game
+    showQuestion();
+  </script>
+
+</body>
+</html>
